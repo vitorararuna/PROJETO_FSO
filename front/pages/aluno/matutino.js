@@ -1,15 +1,13 @@
-import Image from "next/image";
 import { Inter } from "next/font/google";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export default function Vespertino() {
+export default function Matutino() {
 //TODO - REDIRECT:
    //lógica para prazo encerrado
    //ógica para matrícula já realizada
-
 
   const router = useRouter();
   const { cpf } = router.query;
@@ -42,8 +40,8 @@ export default function Vespertino() {
   const handleChooseTrilha = (trilha) => {
     console.log(`Escolhendo a ${trilha}`);
     router.push({
-      pathname: "/matricula_realizada",
-      query: { cpf: cpf, turno: "VESPERTINO", trilha: trilha },
+      pathname: "/aluno/matricula_realizada",
+      query: { cpf: cpf, turno: "MATUTINO", trilha: trilha },
     });
   };
 

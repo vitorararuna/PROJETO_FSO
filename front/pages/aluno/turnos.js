@@ -29,12 +29,12 @@ export default function Turnos() {
   const handleChooseTurno = (turno) => {
     if (turno === "MATUTINO") {
       router.push({
-        pathname: "/matutino",
+        pathname: "/aluno/matutino",
         query: { cpf: cpf }
       });
     } else if (turno === "VESPERTINO") {
       router.push({
-        pathname: "/vespertino",
+        pathname: "/aluno/vespertino",
         query: { cpf: cpf }
       });
     }
