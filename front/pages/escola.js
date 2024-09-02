@@ -4,14 +4,16 @@ import { useState } from "react";
 export default function Escola() {
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
+  const [mensagemErro, setMensagemErro] = useState("");
   const router = useRouter();
 
   const handleLogin = (e) => {
     e.preventDefault();
     if (usuario == "escola" && senha == "escola") {
-      console.log("redirecionar para pagina da escola");
+      router.push("/escola/cadastro");
     } else {
-      console.log("credencial invalida");
+      setMensagemErro("Credencial inválida");
+      setTimeout(() => setMensagemErro(""), 3000);
     }
   };
 
@@ -70,7 +72,12 @@ export default function Escola() {
                 />
               </div>
             </div>
-            <button className="bg-gradient-to-b from-gray-700 to-gray-900 font-medium p-2 md:p-4 text-white uppercase w-full">
+            {mensagemErro && (
+              <div className="mt-4 bg-red-500 text-white p-2 rounded text-center">
+                {mensagemErro}
+              </div>
+            )}
+            <button className="bg-gradient-to-b from-gray-700 to-gray-900 font-medium p-2 md:p-4 text-white uppercase w-full mt-4">
               Login
             </button>
           </form>

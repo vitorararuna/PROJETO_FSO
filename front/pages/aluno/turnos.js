@@ -46,6 +46,9 @@ export default function Turnos() {
         <h1>PROJETO FSO 2024.2</h1>
         <hr className="mb-5"></hr>
       </div>
+        <div className="bg-yellow-200 text-yellow-800 p-4 text-center font-bold">
+          VOCÊ TEM APENAS 30 SEGUNDOS PARA REALZIAR A MATRÍCULA COMPLETA!
+        </div>
       <div className="bg-r1 h-screen overflow-hidden flex items-center justify-center">
         <div className="bg-white lg:w-5/12 md:w-6/12 w-10/12 shadow-3xl border-4 border-gray-300 rounded-lg">
           <div className="flex justify-center p-12 md:p-24">

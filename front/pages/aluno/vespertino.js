@@ -5,10 +5,9 @@ import { useEffect, useState } from "react";
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Vespertino() {
-//TODO - REDIRECT:
-   //lógica para prazo encerrado
-   //ógica para matrícula já realizada
-
+  //TODO - REDIRECT:
+  //lógica para prazo encerrado
+  //ógica para matrícula já realizada
 
   const router = useRouter();
   const { cpf } = router.query;
@@ -52,6 +51,9 @@ export default function Vespertino() {
         <h1>PROJETO FSO 2024.2</h1>
         <hr class="mb-5"></hr>
       </div>
+      <div className="bg-yellow-200 text-yellow-800 p-4 text-center font-bold">
+        VOCÊ TEM APENAS 30 SEGUNDOS PARA REALZIAR A MATRÍCULA COMPLETA!
+      </div>
       <div class="bg-r1 h-screen overflow-hidden flex items-center justify-center">
         <div class="bg-white shadow-3xl border-4 border-gray-300 rounded-lg">
           <div class="flex justify-center p-12 md:p-24">
@@ -60,54 +62,58 @@ export default function Vespertino() {
               <div className="flex items-center justify-between">
                 <h1>TRILHA 1: ENEGRE-SER</h1>
                 {trilha1 === "DISPONÍVEL" ? (
-                    <button
-                      className="bg-green-500 text-white font-bold py-1 px-4 rounded"
-                      onClick={() => handleChooseTrilha("TRILHA 1: ENEGRE-SER")}
-                    >
-                      ESCOLHER
-                    </button>
-                  ) : (
-                    <span className="mx-2 text-red-500">{trilha1}</span>
-                  )}
+                  <button
+                    className="bg-green-500 text-white font-bold py-1 px-4 rounded"
+                    onClick={() => handleChooseTrilha("TRILHA 1: ENEGRE-SER")}
+                  >
+                    ESCOLHER
+                  </button>
+                ) : (
+                  <span className="mx-2 text-red-500">{trilha1}</span>
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <h1>TRILHA 2: DINHEIRO NA MÃO É VENDAVAL</h1>
                 {trilha2 === "DISPONÍVEL" ? (
-                    <button
-                      className="bg-green-500 text-white font-bold py-1 px-4 rounded"
-                      onClick={() => handleChooseTrilha("TRILHA 2: DINHEIRO NA MÃO É VENDAVA")}
-                    >
-                      ESCOLHER
-                    </button>
-                  ) : (
-                    <span className="mx-2 text-red-500">{trilha2}</span>
-                  )}
+                  <button
+                    className="bg-green-500 text-white font-bold py-1 px-4 rounded"
+                    onClick={() =>
+                      handleChooseTrilha("TRILHA 2: DINHEIRO NA MÃO É VENDAVA")
+                    }
+                  >
+                    ESCOLHER
+                  </button>
+                ) : (
+                  <span className="mx-2 text-red-500">{trilha2}</span>
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <h1>TRILHA 3: ADMIRÁVEL MUNDO NOVO </h1>
                 {trilha3 === "DISPONÍVEL" ? (
-                    <button
-                      className="bg-green-500 text-white font-bold py-1 px-4 rounded"
-                      onClick={() => handleChooseTrilha("TRILHA 3: ADMIRÁVEL MUNDO NOVO")}
-                    >
-                      ESCOLHER
-                    </button>
-                  ) : (
-                    <span className="mx-2 text-red-500">{trilha3}</span>
-                  )}
+                  <button
+                    className="bg-green-500 text-white font-bold py-1 px-4 rounded"
+                    onClick={() =>
+                      handleChooseTrilha("TRILHA 3: ADMIRÁVEL MUNDO NOVO")
+                    }
+                  >
+                    ESCOLHER
+                  </button>
+                ) : (
+                  <span className="mx-2 text-red-500">{trilha3}</span>
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <h1>TRILHA 4: AGROECOLOGIA </h1>
                 {trilha4 === "DISPONÍVEL" ? (
-                    <button
-                      className="bg-green-500 text-white font-bold py-1 px-4 rounded"
-                      onClick={() => handleChooseTrilha("TRILHA 4: AGROECOLOGIA")}
-                    >
-                      ESCOLHER
-                    </button>
-                  ) : (
-                    <span className="mx-2 text-red-500">{trilha4}</span>
-                  )}
+                  <button
+                    className="bg-green-500 text-white font-bold py-1 px-4 rounded"
+                    onClick={() => handleChooseTrilha("TRILHA 4: AGROECOLOGIA")}
+                  >
+                    ESCOLHER
+                  </button>
+                ) : (
+                  <span className="mx-2 text-red-500">{trilha4}</span>
+                )}
               </div>
             </div>
           </div>

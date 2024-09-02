@@ -1,35 +1,7 @@
 import { useRouter } from "next/router";
-import { useState } from "react";
-import { CPFS } from "@/constants";
 
 export default function Home() {
-  const [cpf, setCpf] = useState("");
   const router = useRouter();
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (CPFS.includes(cpf)) {
-
-      
-      if (cpf == 1) {
-        //TODO: lógica para prazo encerrado
-        router.push("/prazo_encerrado");
-      } else if (cpf == 2) {
-         //TODO: lógica para matrícula já realizada
-        router.push({
-          pathname: "/matricula_realizada",
-          query: { cpf: 12345, turno: "MATUTINO", trilha: "TRILHA 1: ENEGRE-SER" },
-        });
-      } else {
-        router.push({
-          pathname: "/turnos",
-          query: { cpf: cpf }
-        });
-      }
-    } else {
-      router.push("/invalido");
-    }
-  };
 
   return (
     <div className="flex flex-col">
