@@ -10,6 +10,7 @@ class Turma(models.Model):
     vespertino = models.BooleanField(default=False)
     trilha = models.CharField(max_length=100)
     max_size = models.IntegerField(default=0)
+    vagas = models.IntegerField(default=0)
 
 
     def __str__(self):
