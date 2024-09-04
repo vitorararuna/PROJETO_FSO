@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.http import JsonResponse
-from blog.models import Person, Student
+from blog.models import Person, Student, Turma
 
 # Define a view diretamente no arquivo urls.py
 def aluno_login(request):
@@ -42,8 +42,35 @@ def aluno_login(request):
         )
 
     return JsonResponse(student, safe=False, status=200)
+def turnos(request):
+    turnos = [
+        {'id': 1, 'name': 'Manhã'},
+        {'id': 2, 'name': 'Tarde'},
+    ]
+    return JsonResponse(turnos, safe=False, status=200)
+
+def turmasMatutino(request):
+    turmas = list(Turma.objects.values())
+    aux = []
+    for turma in turmas:
+        if turma.getMatutino():
+            aux.append(turma)
+
+    return JsonResponse(aux, safe=False, status=200)
+
+def turmasVespertino(request):
+    turmas = list(Turma.objects.values())
+    aux = []
+    for turma in turmas:
+        if turma.getVespertino():
+            aux.append(turma)
+
+    return JsonResponse(aux, safe=False, status=200)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('aluno/login', aluno_login, name='aluno_login'),
+    path('turnos', turnos , name='turnos'),
+    path('matutino/turmas', turmasMatutino , name='turnos'),
+    path('vespertino/turmas', turmasVespertino , name='turnos'),
 ]

@@ -12,6 +12,11 @@ class Turma(models.Model):
     max_size = models.IntegerField(default=0)
     vagas = models.IntegerField(default=0)
 
+    def getMatutino(self):
+        return self.matutino
+
+    def getVespertino(self):
+        return self.vespertino
 
     def __str__(self):
         return self.name
