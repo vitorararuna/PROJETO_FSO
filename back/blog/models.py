@@ -5,6 +5,7 @@ from django.conf import settings
 from django.utils import timezone
 
 class Turma(models.Model):
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     matutino = models.BooleanField(default=False)
     vespertino = models.BooleanField(default=False)
@@ -35,13 +36,18 @@ class Student(Person):
     turma = models.ForeignKey(Turma, null=True, on_delete=models.SET_NULL, blank=True)
     matriculado = models.BooleanField(default=False)
     entry_time = models.DateTimeField(default=timezone.now)
+    time_limit = models.DateTimeField(default=timezone.now)
 
     
 
-    def timeLimit(self):
-        return timezone.now() + datetime.timedelta(seconds=30)
+    def timeLimit():
+        return  datetime.timedelta(seconds=30)
     
     def setTimeLimit(self):
+        self.timeLimit = self.timeLimit()
+        self.save()
+
+    def setEntryTime(self):
         self.entry_time = timezone.now()
         self.save()
 class Admin(Person):
