@@ -36,7 +36,7 @@ def aluno_login(request):
         return JsonResponse({'error': 'Prazo encerrado'}, status=405)
 
     if student.matriculado:
-        return JsonResponse({'message': 'Matrícula já realizada'},status=409)
+        return JsonResponse({'message': 'Matrícula já realizada','turma:': student.turma.name,"trilha":student.turma.trilha},status=409)
     
      # Serializar a instância do modelo Studen
 
