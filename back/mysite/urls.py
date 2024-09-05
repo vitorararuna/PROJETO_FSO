@@ -161,6 +161,13 @@ def cadastrar_cpf(request):
                 return JsonResponse({'error': 'Nome é obrigatório'}, status=400)
             
             student = Student(CPF=cpf, name=name)
+
+            students = list(Student.objects.values())
+
+            for student in students:
+                if student['CPF'] == cpf:
+                    return JsonResponse({'error': 'CPF já cadastrado'}, status=409)
+
             student.save()
 
             return JsonResponse({'message': 'Aluno cadastrado com sucesso'}, status=200)
