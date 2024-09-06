@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { request_turnos } from "../api/apiRoutes";
 
 export default function Turnos() {
 //TODO - REDIRECT:
@@ -13,18 +14,20 @@ export default function Turnos() {
   const [matutino, setMatutino] = useState("");
 
   useEffect(() => {
-    // TODO: Lógica para definir a disponibilidade dos turnos
-    if (cpf == 3) {
-      setVespertino("DISPONÍVEL");
-      setMatutino("DISPONÍVEL");
-    } else if (cpf == 4) {
-      setVespertino("DISPONÍVEL");
-      setMatutino("INDISPONÍVEL");
-    } else if (cpf == 5) {
-      setVespertino("INDISPONÍVEL");
-      setMatutino("DISPONÍVEL");
-    }
-  }, [cpf]);
+    const fetchData = async () => {
+      try {
+        const response = await request_turnos(); 
+        console.log("TURNOS:", response);
+        setVespertino(response[0].vagas > 0 ? "DISPONÍVEL" : "INDISPONÍVEL");
+        setMatutino(response[1].vagas > 0 ? "DISPONÍVEL" : "INDISPONÍVEL");
+
+      } catch (error) {
+        throw error;
+      }
+    };
+
+    fetchData(); 
+  }, []);
 
   const handleChooseTurno = (turno) => {
     if (turno === "MATUTINO") {

@@ -36,7 +36,7 @@ def aluno_login(request):
         return JsonResponse({'error': 'Prazo encerrado'}, status=405)
 
     if student.matriculado:
-        return JsonResponse({'message': 'Matrícula já realizada','turma:': student.turma.name,"trilha":student.turma.trilha},status=409)
+        return JsonResponse({'message': 'Matrícula já realizada','turma:': student.turma.name,"trilha":student.turma.trilha},status=200)
     
      # Serializar a instância do modelo Studen
 
@@ -162,11 +162,11 @@ def cadastrar_cpf(request):
             
             student = Student(CPF=cpf, name=name)
 
-            students = list(Student.objects.values())
+            # students = list(Student.objects.values())
 
-            for student in students:
-                if student['CPF'] == cpf:
-                    return JsonResponse({'error': 'CPF já cadastrado'}, status=409)
+            # for student in students:
+            #     if student['CPF'] == cpf:
+            #         return JsonResponse({'error': 'CPF já cadastrado'}, status=409)
 
             student.save()
 

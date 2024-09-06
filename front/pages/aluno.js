@@ -1,33 +1,46 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { CPFS } from "@/constants";
+import { request_login } from "./api/apiRoutes";
 
 export default function Aluno() {
   const [cpf, setCpf] = useState("");
   const router = useRouter();
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (CPFS.includes(cpf)) {
 
-      
-      if (cpf == 1) {
-        //TODO: lógica para prazo encerrado
-        router.push("/aluno/prazo_encerrado");
-      } else if (cpf == 2) {
-         //TODO: lógica para matrícula já realizada
-        router.push({
-          pathname: "/aluno/matricula_realizada",
-          query: { cpf: 12345, turno: "MATUTINO", trilha: "TRILHA 1: ENEGRE-SER" },
-        });
-      } else {
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    try {
+      const data = await request_login(cpf);
+
+      console.log("LOGIN:", data);
+
+      if (data?.matriculado == false) {
         router.push({
           pathname: "/aluno/turnos",
-          query: { cpf: cpf }
+          query: { cpf: cpf },
         });
       }
-    } else {
-      router.push("/aluno/invalido");
+
+      if (data?.message == "Matrícula já realizada") { 
+        const trilha_name = data.trilha + " " + data.turma;
+        router.push({
+          pathname: "/aluno/matricula_realizada",
+          query: {
+            cpf: cpf,
+            turno: "undefined",
+            trilha: trilha_name, 
+          },
+        });
+      }
+
+    } catch (error) {
+      const status = error?.response?.status;
+      if (status === 404) {
+        router.push("/aluno/invalido");
+      } else {
+        console.log("Erro ao realizar login:", error);
+      }
     }
   };
 
