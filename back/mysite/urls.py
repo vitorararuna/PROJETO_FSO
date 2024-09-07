@@ -131,7 +131,11 @@ def relatorio(request):
 
         for turma in turmas:
             lista = []
-            retorno[turma['name']] = [turma['id'], turma['trilha']]
+            if turma['matutino']:
+                string = 'Matutino'
+            if turma['vespertino']:
+                string = 'Vespertino'
+            retorno[turma['name']] = [turma['id'], turma['trilha'], string]
             for student in students:
                 if student['turma_id'] == turma['id']:
                     lista.append(student)
@@ -162,11 +166,11 @@ def cadastrar_cpf(request):
             
             student = Student(CPF=cpf, name=name)
 
-            # students = list(Student.objects.values())
+            students = list(Student.objects.values())
 
-            # for student in students:
-            #     if student['CPF'] == cpf:
-            #         return JsonResponse({'error': 'CPF já cadastrado'}, status=409)
+            for studante in students:
+                if studante['CPF'] == cpf:
+                    return JsonResponse({'error': 'CPF já cadastrado'}, status=409)
 
             student.save()
 
@@ -176,8 +180,14 @@ def cadastrar_cpf(request):
     else:
         return JsonResponse({'error': 'Método não permitido'}, status=405)
 
+def cadastrados(request):
+    students = list(Student.objects.values())
+    #students = [student for student in students if student['matriculado']]
+    return JsonResponse(students, safe=False, status=200)
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('adm/cadastrados', cadastrados, name='cadastrados'),
     path('aluno/login', aluno_login, name='aluno_login'),
     path('turnos', turnos , name='turnos'),
     path('matutino/turmas', turmasMatutino , name='turnos'),
