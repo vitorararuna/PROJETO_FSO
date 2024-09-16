@@ -16,6 +16,7 @@ Including another URLconf
 """
 import json
 import os
+import threading 
 from django.contrib import admin
 from django.urls import path
 from django.http import JsonResponse
@@ -24,22 +25,25 @@ from django.views.decorators.csrf import csrf_exempt
 # Define a view diretamente no arquivo urls.py
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+file_lock = threading.Lock()
+
 def readArqv(file):
     file_path = os.path.join(BASE_DIR, file)
-    f = open(file_path, 'r')
     lista = []
-    for line in f:
-        lista.append(line.split(','))
-    f.close()
+     # Acquire the lock before accessing the file
+    with file_lock:
+        with open(file_path, 'r') as f:
+            for line in f:
+                lista.append(line.split(','))
     return lista
 
 def getArqv(file, key):
     file_path = os.path.join(BASE_DIR, file)
-    f = open(file_path, 'r')
     lista = []
-    for line in f:
-        lista.append(line.split(','))
-    f.close()
+    with file_lock:
+        with open(file_path, 'r') as f:
+            for line in f:
+                lista.append(line.split(','))
     for elem in lista:
         if elem[0] == key:
             return elem
@@ -47,38 +51,35 @@ def getArqv(file, key):
 
 def writeArqv(file, lista):
     file_path = os.path.join(BASE_DIR, file)
-    f = open(file_path, 'w')
-    f.write(','.join(lista))
-    f.close()
+    with file_lock:
+        with open(file_path, 'w') as f:
+            f.write(','.join(lista))
     return
 
 def saveArqv(file, busca):
-    #print(busca)
     file_path = os.path.join(BASE_DIR, file)
-    f = open(file_path, 'r')
     string = ''
     resultado = []
     lista = []
-    for line in f:
-        lista = line.split(',')
-        if lista[0] == busca[0]:
-            lista = busca
-        resultado.append(','.join(lista))
-        string = string + ','.join(lista)
-        #resultado.append('\n')
-    f.close()
+    with file_lock:
+        with open(file_path, 'r') as f:
+            for line in f:
+                lista = line.split(',')
+                if lista[0] == busca[0]:
+                    lista = busca
+                resultado.append(','.join(lista))
+                string = string + ','.join(lista)
 
-    f = open(file_path, 'w')
-    f.write(string)
-    f.close()
+        with open(file_path, 'w') as f:
+            f.write(string)
     return
 
 def appendArqv(file, busca):
     file_path = os.path.join(BASE_DIR, file)
-    f = open(file_path, 'a')
-    f.write(','.join(busca))
-    f.write('\n')
-    f.close()
+    with file_lock:
+        with open(file_path, 'a') as f:
+            f.write(','.join(busca))
+            f.write('\n')
     return
 
 
