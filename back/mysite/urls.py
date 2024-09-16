@@ -18,13 +18,21 @@ import json
 from django.contrib import admin
 from django.urls import path
 from django.http import JsonResponse
-from blog.models import Person, Student, Turma
+from blog.models import Person, Student, Turma, Admin
 from django.views.decorators.csrf import csrf_exempt
 # Define a view diretamente no arquivo urls.py
 def aluno_login(request):
-    prazo_encerrado = False
-
+    admin = Admin.objects.get(CPF='admin')
+    prazo = admin.open
     cpf = request.GET.get('cpf', None)
+    turmas = Turma.objects.all()
+    flag = True
+    for turma in turmas:
+        if turma.vagas != 0:
+            flag = False
+
+    if flag:
+        return JsonResponse({'error': 'servidor cheio por favor aguarde'}, status=405)
     if not cpf:
         return JsonResponse({'error': 'CPF é obrigatório'}, status=400)
 
@@ -32,7 +40,7 @@ def aluno_login(request):
         student = Student.objects.get(CPF=cpf)
     except Student.DoesNotExist:
         return JsonResponse({'error': 'Aluno não encontrado'}, status=407)
-    if prazo_encerrado:
+    if prazo == 'False':
         return JsonResponse({'error': 'Prazo encerrado'}, status=405)
 
    
@@ -53,17 +61,19 @@ def aluno_login(request):
 
     turmas = Turma.objects.all()
     for turma in turmas:
-        if student.CPF in turma.reservas:
+        reservas = turma.reservas.split(',')
+        if student.CPF in reservas:
             return JsonResponse({'error': 'Aluno já reservou uma vaga'}, status=406)
     
     for turma in turmas:
+        reservas = turma.reservas.split(',')
         if turma.vagas > 0:
             turma.vagas -= 1
-            turma.reservas.append(student.CPF)
+            reservas.append(student.CPF)
+        turma.reservas = ','.join(reservas)
         turma.save()
 
-    for turma in turmas:
-        print(turma.vagas, turma.name)
+    printa()
 
     return JsonResponse(student_data, safe=False, status=200)
 
@@ -108,7 +118,7 @@ def matricula(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-
+            admin = Admin.objects.get(CPF='admin')
             cpf = data.get('cpf')
             turma_id = data.get('turma_id')
 
@@ -127,19 +137,48 @@ def matricula(request):
                 return JsonResponse({'error': 'Matrícula já realizada'}, status=402)
 
             if turma.vagas == 0:
-                return JsonResponse({'error': 'Turma sem vagas'}, status=403)
-            print (turma.reservas)
-            if student.CPF in turma.reservas:
+                if student.CPF not in turma.reservas:
+                    return JsonResponse({'error': 'Turma sem vagas'}, status=403)    
+                
+            count = int(admin.count)
+            print (turma.name,turma.reservas)
+            reservas = turma.reservas.split(',')
+            if student.CPF in reservas:
                 student.turma = turma
                 student.matriculado = True
                 student.save()
+                turma.max_size -= 1
+                turma.save()
+                if turma.max_size == 0:
+                    count -= 1
+                    admin.count = str(count)
+                    admin.save()
+                    if count == 0:
+                        aux1 = Turma.objects.all()
+                        for aux2 in aux1:
+                            if aux2.max_size != 0:
+                                aux2.vagas -= 1
+                                aux2.save()
+                                
                 turmas = Turma.objects.all()
+                x = 0
                 for aux in turmas:
-                    if student.CPF in aux.reservas:
-                        aux.reservas.remove(student.CPF)
-                        if turma_id != aux.id:
+                    printa()
+                    x += 1
+                    print(turma.name)
+                    print(x)
+                    reservaAux = aux.reservas.split(',')
+                    if student.CPF in reservaAux:
+                        reservaAux.remove(student.CPF)
+                        print(turma_id != str(aux.id))
+                        if turma_id != str(aux.id):
                             aux.vagas += 1
-                aux.save()
+                    aux.reservas = ','.join(reservaAux)
+                    aux.save()
+                
+                
+
+                        
                 return JsonResponse({'message': 'Matrícula realizada com sucesso'}, status=200)
             return JsonResponse({'message': 'Falha na matrícula'}, status=405)
         except json.JSONDecodeError:
@@ -169,6 +208,12 @@ def relatorio(request):
     else:
         return JsonResponse({'error': 'Método não permitido'}, status=405)
 
+def printa():
+    turmas = Turma.objects.all()
+    print('------------------------------------------')
+    for turma in turmas:
+        print(turma.vagas, turma.name, turma.reservas)
+    print('------------------------------------------')
 @csrf_exempt
 def cadastrar_cpf(request):
     if request.method == 'POST':
@@ -222,14 +267,67 @@ def timeOut(request):
     turmas = Turma.objects.all()
 
     for turma in turmas:
-        if cpf in turma.reservas:
+        print(turma.vagas, turma.name, turma.reservas)
+        reservas = turma.reservas.split(',')
+        if cpf in reservas:
             turma.vagas += 1
-            turma.reservas.remove(student.CPF)
+            reservas.remove(student.CPF)
             turma.save()
+        turma.reservas = ','.join(reservas)
+        turma.save()
     for turma in turmas:
         print(turma.vagas, turma.name, turma.reservas)
 
     return JsonResponse({'message': 'LogOut do aluno com sucesso'}, status=200)
+def prazoEncerrado(request):
+    admin = Admin.objects.get(CPF='admin')
+    admin.open = 'False'
+    return JsonResponse({'message': 'Prazo encerrado'}, status=200)
+def abrirPrazo(request):
+    admin = Admin.objects.get(CPF='admin')
+    admin.open = 'True'
+    qtdTurmas = Turma.objects.all().count()
+    print(qtdTurmas)
+    qtdStudents = Student.objects.all().count()
+    print(qtdStudents)
+    alunos = Student.objects.all()
+    for aluno in alunos:
+        aluno.matriculado = False
+        aluno.turma = None
+        aluno.save()
+
+    max = qtdStudents//qtdTurmas
+    max = max + 1
+    resto = qtdStudents % qtdTurmas
+    admin.count = str(resto)
+    admin.save()
+    turmas = Turma.objects.all()
+    for turma in turmas:
+        turma.vagas = max
+        turma.max_size = max
+        turma.reservas = ''
+        turma.save()
+    return JsonResponse({'message': 'Prazo aberto'}, status=200)
+
+def reservas(request):
+    cpf = request.GET.get('cpf', None)
+    if not cpf:
+        return JsonResponse({'error': 'CPF é obrigatório'}, status=400)
+
+    try:
+        student = Student.objects.get(CPF=cpf)
+    except Student.DoesNotExist:
+        return JsonResponse({'error': 'Aluno não encontrado'}, status=404)
+
+    turmas = Turma.objects.all()
+    retorno = []
+    for turma in turmas:
+        reservas = turma.reservas.split(',')
+        if student.CPF in reservas:
+            retorno.append(turma.name)
+
+    return JsonResponse(retorno, safe=False, status=200)
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -241,5 +339,8 @@ urlpatterns = [
     path('aluno/realizar_matricula',matricula, name='matricula'),
     path('adm/relatorio',relatorio, name='relatorio'),
     path('escola/cadastrar_cpf',cadastrar_cpf, name='cadastrar_cpf'),
-    path('aluno/timeOut',timeOut, name='logOut')
+    path('aluno/timeOut',timeOut, name='logOut'),
+    path('adm/prazo_encerrado',prazoEncerrado, name='prazo_encerrado'),
+    path('adm/abrir_prazo',abrirPrazo, name='abrir_prazo'),
+    path('aluno/reservas',reservas, name='reservas'),
 ]

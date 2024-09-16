@@ -12,7 +12,7 @@ class Turma(models.Model):
     trilha = models.CharField(max_length=100)
     max_size = models.IntegerField(default=0)
     vagas = models.IntegerField(default=0)
-    reservas = []
+    reservas = models.CharField(max_length=100, default="") 
 
     def getMatutino(self):
         return self.matutino
@@ -52,6 +52,8 @@ class Student(Person):
         self.entry_time = timezone.now()
         self.save()
 class Admin(Person):
-    pass
+    open = models.CharField(max_length=100, default="False")
+    count = models.CharField(max_length=100, default="0")
+
 
 # Create your models here.
