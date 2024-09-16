@@ -15,15 +15,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 import json
+import os
 from django.contrib import admin
 from django.urls import path
 from django.http import JsonResponse
 #from blog.models import Person, Student, Turma, Admin
 from django.views.decorators.csrf import csrf_exempt
 # Define a view diretamente no arquivo urls.py
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def readArqv(file):
-    f = open(file, 'r')
+    file_path = os.path.join(BASE_DIR, file)
+    f = open(file_path, 'r')
     lista = []
     for line in f:
         lista.append(line.split(','))
@@ -31,7 +34,8 @@ def readArqv(file):
     return lista
 
 def getArqv(file, key):
-    f = open(file, 'r')
+    file_path = os.path.join(BASE_DIR, file)
+    f = open(file_path, 'r')
     lista = []
     for line in f:
         lista.append(line.split(','))
@@ -42,27 +46,36 @@ def getArqv(file, key):
     return None
 
 def writeArqv(file, lista):
-    f = open(file, 'w')
+    file_path = os.path.join(BASE_DIR, file)
+    f = open(file_path, 'w')
     f.write(','.join(lista))
     f.close()
     return
 
 def saveArqv(file, busca):
-    f = open(file, 'w')
+    #print(busca)
+    file_path = os.path.join(BASE_DIR, file)
+    f = open(file_path, 'r')
+    string = ''
     resultado = []
     lista = []
-    for line in file:
+    for line in f:
         lista = line.split(',')
         if lista[0] == busca[0]:
             lista = busca
-        resultado.append(lista)
-        resultado.append('\n')
-    f.write(','.join(resultado))
+        resultado.append(','.join(lista))
+        string = string + ','.join(lista)
+        #resultado.append('\n')
+    f.close()
+
+    f = open(file_path, 'w')
+    f.write(string)
     f.close()
     return
 
 def appendArqv(file, busca):
-    f = open(file, 'a')
+    file_path = os.path.join(BASE_DIR, file)
+    f = open(file_path, 'a')
     f.write(','.join(busca))
     f.write('\n')
     f.close()
@@ -116,13 +129,13 @@ def aluno_login(request):
     
     for turma in turmas:
         reservas = turma[7].split('.')
-        if turma[6] > 0:   #vagas
-            turma[6] -= 1
+        if int(turma[6]) > 0:   #vagas
+            turma[6] = str(int(turma[6]) - 1)
             reservas.append(student[0])
         turma[7] = '.'.join(reservas)
         saveArqv("turmas.txt", turma)
 
-    printa()
+    #printa()
 
     return JsonResponse(student_data, safe=False, status=200)
 
@@ -131,10 +144,10 @@ def turnos(request):
     vagasMatutino = 0
     vagasVespertino = 0
     for turma in turmas:
-        if turma[2]=='Matutino':
-            vagasMatutino += turma[6]
-        if turma[3]=='Vespertino':
-            vagasVespertino += turma[6]
+        if turma[2]=='True':
+            vagasMatutino += int(turma[6])
+        if turma[3]=='True':
+            vagasVespertino += int(turma[6])
 
     turnos = [
         {'id': 1, 'name': 'Manhã', 'vagas': vagasMatutino},
@@ -146,7 +159,7 @@ def turmasMatutino(request):
     turmas = readArqv("turmas.txt")
     aux = []
     for turma in turmas:
-        if turma[2] == 'Matutino':
+        if turma[2] == 'True':
             aux.append(turma)
 
     return JsonResponse(aux, safe=False, status=200)
@@ -155,7 +168,7 @@ def turmasVespertino(request):
     turmas = readArqv("turmas.txt")
     aux = []
     for turma in turmas:
-        if turma[3] == 'Vespertino':
+        if turma[3] == 'True':
             aux.append(turma)
 
     return JsonResponse(aux, safe=False, status=200)
@@ -186,11 +199,11 @@ def matricula(request):
                 return JsonResponse({'error': 'Matrícula já realizada'}, status=402)
 
             if int(turma[6]) <= 0:
-                if student.CPF not in turma.reservas:
+                if student[0] not in turma[7].split('.'):
                     return JsonResponse({'error': 'Turma sem vagas'}, status=403)    
                 
-            count = int(admin[1])
-            reservas = turma[7].split(',')
+            count = int(admin[0][1])
+            reservas = turma[7].split('.')
             if student[0] in reservas:
                 student[3] = turma[0]
                 student[2] = "True"
@@ -199,24 +212,23 @@ def matricula(request):
                 saveArqv("turmas.txt", turma)
                 if turma[5] == "0":
                     count -= 1
-                    admin[1] = str(count)
-                    saveArqv("adm.txt", admin)
+                    admin[0][1] = str(count)
+                    writeArqv("adm.txt", admin[0])
                     if count == 0:
                         aux1 = readArqv("turmas.txt")
                         for aux2 in aux1:
-                            if int(aux2[5]) >= 0:
+                            if int(aux2[5]) > 0:
                                 aux2[6] = str(int(aux2[6]) - 1)
                                 saveArqv("turmas.txt", aux2)
                                 
                 turmas = readArqv("turmas.txt")
                 for aux in turmas:
-                    printa()
                     reservaAux = aux[7].split('.')
                     if student[0] in reservaAux:
                         reservaAux.remove(student[0])
                         if turma_id != str(aux[0]):
                             aux[6] = str(int(aux[6])+1)
-                    aux[7] = ','.join(reservaAux)
+                    aux[7] = '.'.join(reservaAux)
                     saveArqv("turmas.txt", aux)
                 
                 
@@ -237,9 +249,9 @@ def relatorio(request):
 
         for turma in turmas:
             lista = []
-            if turma[2] == 'Matutino':
+            if turma[2] == 'True':
                 string = 'Matutino'
-            if turma[3] == 'Vespertino':
+            if turma[3] == 'True':
                 string = 'Vespertino'
             retorno[turma[1]] = [turma[0], turma[4], string]
             for student in students:
@@ -264,7 +276,7 @@ def cadastrar_cpf(request):
             if not request.body:
                 return JsonResponse({'error': 'Corpo da requisição vazio'}, status=400)
             
-            print('abacate')
+            
             data = json.loads(request.body)
 
             cpf = data.get('cpf')
@@ -278,7 +290,7 @@ def cadastrar_cpf(request):
             
             student = [cpf,name, 'False', 'None']
 
-            students = readArqv("alunos.txt")
+            students = readArqv('alunos.txt')
 
             for studante in students:
                 if studante[0] == cpf:
@@ -314,15 +326,16 @@ def timeOut(request):
         if cpf in reservas:
             turma[6] = str(int(turma[6]) + 1)
             reservas.remove(student[0])
-        turma[7] = ','.join(reservas)
+        turma[7] = '.'.join(reservas)
         saveArqv("turmas.txt", turma)
 
     return JsonResponse({'message': 'LogOut do aluno com sucesso'}, status=200)
 def prazoEncerrado(request):
     admin = readArqv("adm.txt")
     admin[0][0] = 'False'
-    writeArqv("adm.txt", admin)
+    writeArqv("adm.txt", admin[0])
     return JsonResponse({'message': 'Prazo encerrado'}, status=200)
+
 def abrirPrazo(request):
     admin = readArqv("adm.txt")
     admin[0][0] = 'True'
@@ -339,7 +352,7 @@ def abrirPrazo(request):
     max = max + 1
     resto = qtdStudents % qtdTurmas
     admin[0][1] = str(resto)
-    writeArqv("adm.txt", admin)
+    writeArqv("adm.txt", admin[0])
     for turma in turmas:
         turma[6] = str(max)
         turma[5] = str(max)
@@ -362,12 +375,12 @@ def reservas(request):
     for turma in turmas:
         reservas = turma[7].split('.')
         if student[0] in reservas:
-            retorno.append(turma.name)
+            retorno.append(turma[1])
 
     return JsonResponse(retorno, safe=False, status=200)
 
 def restantes(request):
-    admin = getArqv("adm.txt", "admin")
+    admin = readArqv("adm.txt")
     turmas = readArqv("turmas.txt")
     count = int(admin[0][1])
     retorno = []
