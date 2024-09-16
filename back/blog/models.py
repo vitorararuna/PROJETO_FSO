@@ -6,12 +6,13 @@ from django.utils import timezone
 
 class Turma(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True) 
     matutino = models.BooleanField(default=False)
     vespertino = models.BooleanField(default=False)
     trilha = models.CharField(max_length=100)
     max_size = models.IntegerField(default=0)
     vagas = models.IntegerField(default=0)
+    reservas = []
 
     def getMatutino(self):
         return self.matutino

@@ -31,13 +31,15 @@ def aluno_login(request):
     try:
         student = Student.objects.get(CPF=cpf)
     except Student.DoesNotExist:
-        return JsonResponse({'error': 'Aluno não encontrado'}, status=404)
+        return JsonResponse({'error': 'Aluno não encontrado'}, status=407)
     if prazo_encerrado:
         return JsonResponse({'error': 'Prazo encerrado'}, status=405)
 
+   
     if student.matriculado:
         return JsonResponse({'message': 'Matrícula já realizada','turma:': student.turma.name,"trilha":student.turma.trilha},status=200)
     
+
      # Serializar a instância do modelo Studen
 
     student_data = {
@@ -48,6 +50,20 @@ def aluno_login(request):
         'time_limit': student.time_limit,
         # Adicione outros campos conforme necessário
     }
+
+    turmas = Turma.objects.all()
+    for turma in turmas:
+        if student.CPF in turma.reservas:
+            return JsonResponse({'error': 'Aluno já reservou uma vaga'}, status=406)
+    
+    for turma in turmas:
+        if turma.vagas > 0:
+            turma.vagas -= 1
+            turma.reservas.append(student.CPF)
+        turma.save()
+
+    for turma in turmas:
+        print(turma.vagas, turma.name)
 
     return JsonResponse(student_data, safe=False, status=200)
 
@@ -100,28 +116,36 @@ def matricula(request):
                 return JsonResponse({'error': 'CPF é obrigatório'}, status=400)
 
             if not turma_id:
-                return JsonResponse({'error': 'Turma é obrigatória'}, status=400)
+                return JsonResponse({'error': 'Turma é obrigatória'}, status=401)
         
             student = Student.objects.get(CPF=cpf)
-            turma = Turma.objects.get(id=turma_id)
+            
 
+            turma = Turma.objects.get(id=turma_id)
+           
             if student.matriculado:
-                return JsonResponse({'error': 'Matrícula já realizada'}, status=400)
+                return JsonResponse({'error': 'Matrícula já realizada'}, status=402)
 
             if turma.vagas == 0:
-                return JsonResponse({'error': 'Turma sem vagas'}, status=400)
-
-            student.turma = turma
-            student.matriculado = True
-            student.save()
-
-            turma.vagas -= 1
-            turma.save()
-            return JsonResponse({'message': 'Matrícula realizada com sucesso'}, status=200)
+                return JsonResponse({'error': 'Turma sem vagas'}, status=403)
+            print (turma.reservas)
+            if student.CPF in turma.reservas:
+                student.turma = turma
+                student.matriculado = True
+                student.save()
+                turmas = Turma.objects.all()
+                for aux in turmas:
+                    if student.CPF in aux.reservas:
+                        aux.reservas.remove(student.CPF)
+                        if turma_id != aux.id:
+                            aux.vagas += 1
+                aux.save()
+                return JsonResponse({'message': 'Matrícula realizada com sucesso'}, status=200)
+            return JsonResponse({'message': 'Falha na matrícula'}, status=405)
         except json.JSONDecodeError:
-            return JsonResponse({'error': 'Dados inválidos'}, status=400)
+            return JsonResponse({'error': 'Dados inválidos'}, status=406)
     else:
-        return JsonResponse({'error': 'Método não permitido'}, status=405)
+        return JsonResponse({'error': 'Método não permitido'}, status=407)
 
 def relatorio(request):
     if request.method == 'GET':
@@ -185,6 +209,28 @@ def cadastrados(request):
     #students = [student for student in students if student['matriculado']]
     return JsonResponse(students, safe=False, status=200)
 
+def timeOut(request):
+    cpf = request.GET.get('cpf', None)
+    if not cpf:
+        return JsonResponse({'error': 'CPF é obrigatório'}, status=400)
+
+    try:
+        student = Student.objects.get(CPF=cpf)
+    except Student.DoesNotExist:
+        return JsonResponse({'error': 'Aluno não encontrado'}, status=404)
+
+    turmas = Turma.objects.all()
+
+    for turma in turmas:
+        if cpf in turma.reservas:
+            turma.vagas += 1
+            turma.reservas.remove(student.CPF)
+            turma.save()
+    for turma in turmas:
+        print(turma.vagas, turma.name, turma.reservas)
+
+    return JsonResponse({'message': 'LogOut do aluno com sucesso'}, status=200)
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('adm/cadastrados', cadastrados, name='cadastrados'),
@@ -195,4 +241,5 @@ urlpatterns = [
     path('aluno/realizar_matricula',matricula, name='matricula'),
     path('adm/relatorio',relatorio, name='relatorio'),
     path('escola/cadastrar_cpf',cadastrar_cpf, name='cadastrar_cpf'),
+    path('aluno/timeOut',timeOut, name='logOut')
 ]
