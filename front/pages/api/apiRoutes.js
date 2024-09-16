@@ -65,3 +65,67 @@ export const request_login = async (cpf) => {
       throw error;
     }
   };
+
+
+  export const request_aluno_reservas_disponíveis = async (cpf) => {
+    try {
+        const response = await api
+            .get("aluno/reservas", {
+              params: { cpf: cpf },
+          });
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao resgatar reservas disponíveis", error);
+        throw error;
+    }
+  };
+
+  export const request_cadastrados = async () => {
+    try {
+        const response = await api
+            .get("adm/cadastrados");
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao resgatar cadastrados disponíveis", error);
+        throw error;
+    }
+  };
+
+  export const request_cadastrar_cpf = async (cpf, name) => {
+    try {
+      const requestBody = {
+        cpf,
+        name,
+      };
+  
+      const response = await api.post("/escola/cadastrar_cpf", requestBody);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao cadastrar cpf", error);
+    }
+  };
+
+  export const request_adm_relatorio = async () => {
+    try {
+        const response = await api
+            .get("adm/relatorio");
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao resgatar relatório", error);
+        throw error;
+    }
+  };
+
+
+  export const request_logout = async (cpf) => {
+    try {
+        const response = await api
+            .get("/aluno/timeOut", {
+                params: { cpf: cpf },
+            });
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao realizar logout:", error);
+        throw error;
+    }
+  };

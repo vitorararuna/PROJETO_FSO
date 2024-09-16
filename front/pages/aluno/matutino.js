@@ -1,7 +1,7 @@
 import { Inter } from "next/font/google";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { request_matutino, request_realizar_matricula } from "../api/apiRoutes";
+import { request_matutino, request_realizar_matricula, request_aluno_reservas_disponíveis } from "../api/apiRoutes";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -10,24 +10,34 @@ export default function Matutino() {
   const { cpf } = router.query;
 
   const [matutino, setMatutino] = useState([]);
+  const [reservas, setReservas] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchMatutino= async () => {
       try {
         const response = await request_matutino();
-        console.log("MATUTINO:", response);
         setMatutino(response);
       } catch (error) {
         throw error;
       }
     };
 
-    fetchData();
+    const fetchReservas= async () => {
+      try {
+        const response = await request_aluno_reservas_disponíveis(cpf);
+        setReservas(response);
+      } catch (error) {
+        throw error;
+      }
+    };
+
+    fetchMatutino();
+    fetchReservas();
   }, [cpf]);
 
   const handleChooseTrilha = async (turma_id, trilha, turma) => {
     try {
-      await request_realizar_matricula(parseInt(cpf), turma_id);
+      await request_realizar_matricula(cpf, turma_id);
       console.log("Realizando matrícula...");
   
       router.push({
@@ -56,11 +66,11 @@ export default function Matutino() {
             <h1 class="mb-5">TRILHAS:</h1>
               {matutino.map((matutino, index) => (
                 <div key={index} className="flex items-center justify-between mt-8">
-                  <h1 className="mr-2">{"Trilha " + matutino.trilha + " " + matutino.name}</h1>
-                  {matutino.vagas > 0 ? (
+                  <h1 className="mr-2">{"Trilha " + matutino[4] + " " + matutino[1]}</h1>
+                  {reservas.includes(matutino[1]) ? (
                     <button
                       className="bg-green-500 text-white font-bold py-1 px-4 rounded"
-                      onClick={() => handleChooseTrilha(matutino.id, matutino.trilha, matutino.name)}
+                      onClick={() => handleChooseTrilha(matutino[0], matutino[4], matutino[1])}
                     >
                       ESCOLHER
                     </button>

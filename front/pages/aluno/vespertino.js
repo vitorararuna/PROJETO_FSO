@@ -1,7 +1,7 @@
 import { Inter } from "next/font/google";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { request_realizar_matricula, request_vespertino } from "../api/apiRoutes";
+import { request_realizar_matricula, request_vespertino, request_aluno_reservas_disponíveis } from "../api/apiRoutes";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -10,24 +10,34 @@ export default function Vespertino() {
   const { cpf } = router.query;
 
   const [vespertino, setVespertino] = useState([]);
+  const [reservas, setReservas] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchVespertino = async () => {
       try {
         const response = await request_vespertino();
-        console.log("VESPERTINO:", response);
         setVespertino(response);
       } catch (error) {
         throw error;
       }
     };
 
-    fetchData();
+    const fetchReservas= async () => {
+      try {
+        const response = await request_aluno_reservas_disponíveis(cpf);
+        setReservas(response);
+      } catch (error) {
+        throw error;
+      }
+    };
+
+    fetchVespertino();
+    fetchReservas();
   }, [cpf]);
 
   const handleChooseTrilha = async (turma_id, trilha, turma) => {
     try {
-      await request_realizar_matricula(parseInt(cpf), turma_id);
+      await request_realizar_matricula(cpf, turma_id);
       console.log("Realizando matrícula...");
   
       router.push({
@@ -56,11 +66,11 @@ export default function Vespertino() {
             <h1 class="mb-5">TRILHAS:</h1>
               {vespertino.map((vespertino, index) => (
                 <div key={index} className="flex items-center justify-between mt-8">
-                  <h1 className="mr-2">{"Trilha " + vespertino.trilha + " " + vespertino.name}</h1>
-                  {vespertino.vagas > 0 ? (
+                  <h1 className="mr-2">{"Trilha " + vespertino[4] + " " + vespertino[1]}</h1>
+                  {reservas.includes(vespertino[1]) ? (
                     <button
                       className="bg-green-500 text-white font-bold py-1 px-4 rounded"
-                      onClick={() => handleChooseTrilha(vespertino.id, vespertino.trilha, vespertino.name)}
+                      onClick={() => handleChooseTrilha(vespertino[0], vespertino[4], vespertino[1])}
                     >
                       ESCOLHER
                     </button>

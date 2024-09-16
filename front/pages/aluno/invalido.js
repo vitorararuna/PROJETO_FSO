@@ -9,7 +9,7 @@ export default function Invalido() {
         <div class="bg-white lg:w-5/12 md:w-6/12 w-10/12 shadow-3xl border-4 border-gray-300 rounded-lg">
           <div class="flex items-center justify-center p-12 md:p-24">
             <div class="text-lg text-black font-bold text-center">
-              <h1>CPF INVÁLIDO</h1>
+              <h1>CPF INVÁLIDO OU SERVIDOR COMPLETAMENTE CHEIO! TENTE NOVAMENTE MAIS TARDE!</h1>
             </div>
           </div>
         </div>

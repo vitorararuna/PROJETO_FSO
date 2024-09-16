@@ -1,23 +1,21 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { request_turnos } from "../api/apiRoutes";
+import { useAuth } from "../context/AuthContext";
 
 export default function Turnos() {
-//TODO - REDIRECT:
-   //lógica para prazo encerrado
-   //ógica para matrícula já realizada
-
   const router = useRouter();
   const { cpf } = router.query;
+  const { login } = useAuth(); 
 
   const [vespertino, setVespertino] = useState("");
   const [matutino, setMatutino] = useState("");
 
   useEffect(() => {
+    login();
     const fetchData = async () => {
       try {
         const response = await request_turnos(); 
-        console.log("TURNOS:", response);
         setVespertino(response[0].vagas > 0 ? "DISPONÍVEL" : "INDISPONÍVEL");
         setMatutino(response[1].vagas > 0 ? "DISPONÍVEL" : "INDISPONÍVEL");
 

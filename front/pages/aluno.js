@@ -1,11 +1,12 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { request_login } from "./api/apiRoutes";
+import { useAuth } from "./context/AuthContext";
 
 export default function Aluno() {
   const [cpf, setCpf] = useState("");
   const router = useRouter();
-
+  const { setCpfContext, setMatriculou } = useAuth(); 
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -13,34 +14,28 @@ export default function Aluno() {
     try {
       const data = await request_login(cpf);
 
-      console.log("LOGIN:", data);
-
-      if (data?.matriculado == false) {
+      setCpfContext(cpf);
+      setMatriculou(false)
+      if (data?.matriculado == "False") {
         router.push({
           pathname: "/aluno/turnos",
           query: { cpf: cpf },
         });
       }
 
-      if (data?.message == "Matrícula já realizada") { 
-        const trilha_name = data.trilha + " " + data.turma;
+      if (data?.message == "Matrícula já realizada") {
+        console.log(data);
         router.push({
           pathname: "/aluno/matricula_realizada",
           query: {
             cpf: cpf,
-            turno: "undefined",
-            trilha: trilha_name, 
+            turno: data.turno == "True" ? "Matutino" : "Vespertino",
+            trilha: data.trilha,
           },
         });
       }
-
     } catch (error) {
-      const status = error?.response?.status;
-      if (status === 404) {
-        router.push("/aluno/invalido");
-      } else {
-        console.log("Erro ao realizar login:", error);
-      }
+      router.push("/aluno/invalido");
     }
   };
 

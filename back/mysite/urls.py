@@ -109,14 +109,14 @@ def aluno_login(request):
    
     if student[2] == 'True':
         aux = getArqv("turmas.txt", student[3])
-        return JsonResponse({'message': 'Matrícula já realizada','turma:': aux[1],"trilha":aux[4]},status=200)
+        return JsonResponse({'message': 'Matrícula já realizada','turma:': aux[1],"trilha":aux[4], "is_matutino": aux[2]},status=200)
     
 
      # Serializar a instância do modelo Studen
 
     student_data = {
-        'name': student[0],
-        'CPF': student[1],
+        'name': student[1],
+        'CPF': student[0],
         'matriculado': student[2],
         # Adicione outros campos conforme necessário
     }
@@ -288,13 +288,13 @@ def cadastrar_cpf(request):
             if not name:
                 return JsonResponse({'error': 'Nome é obrigatório'}, status=400)
             
-            student = [cpf,name, 'False', 'None']
+            student = [cpf,name, 'False', 'None', ' ']
 
             students = readArqv('alunos.txt')
 
             for studante in students:
                 if studante[0] == cpf:
-                    return JsonResponse({'error': 'CPF já cadastrado'}, status=409)
+                    return JsonResponse({'error': 'CPF já cadastrado'}, status=200)
 
             appendArqv("alunos.txt", student)
 
