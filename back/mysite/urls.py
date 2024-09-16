@@ -18,17 +18,67 @@ import json
 from django.contrib import admin
 from django.urls import path
 from django.http import JsonResponse
-from blog.models import Person, Student, Turma, Admin
+#from blog.models import Person, Student, Turma, Admin
 from django.views.decorators.csrf import csrf_exempt
 # Define a view diretamente no arquivo urls.py
+
+def readArqv(file):
+    f = open(file, 'r')
+    lista = []
+    for line in f:
+        lista.append(line.split(','))
+    f.close()
+    return lista
+
+def getArqv(file, key):
+    f = open(file, 'r')
+    lista = []
+    for line in f:
+        lista.append(line.split(','))
+    f.close()
+    for elem in lista:
+        if elem[0] == key:
+            return elem
+    return None
+
+def writeArqv(file, lista):
+    f = open(file, 'w')
+    f.write(','.join(lista))
+    f.close()
+    return
+
+def saveArqv(file, busca):
+    f = open(file, 'w')
+    resultado = []
+    lista = []
+    for line in file:
+        lista = line.split(',')
+        if lista[0] == busca[0]:
+            lista = busca
+        resultado.append(lista)
+        resultado.append('\n')
+    f.write(','.join(resultado))
+    f.close()
+    return
+
+def appendArqv(file, busca):
+    f = open(file, 'a')
+    f.write(','.join(busca))
+    f.write('\n')
+    f.close()
+    return
+
+
 def aluno_login(request):
-    admin = Admin.objects.get(CPF='admin')
-    prazo = admin.open
+    #admin = Admin.objects.get(CPF='admin')
+    admin = readArqv("adm.txt")
+    prazo = admin[0][0]
     cpf = request.GET.get('cpf', None)
-    turmas = Turma.objects.all()
+
+    turmas = readArqv("turmas.txt")
     flag = True
     for turma in turmas:
-        if turma.vagas != 0:
+        if int(turma[6]) != 0: #vagas
             flag = False
 
     if flag:
@@ -36,56 +86,55 @@ def aluno_login(request):
     if not cpf:
         return JsonResponse({'error': 'CPF é obrigatório'}, status=400)
 
-    try:
-        student = Student.objects.get(CPF=cpf)
-    except Student.DoesNotExist:
+    
+    student = getArqv("alunos.txt", cpf)
+    if student == None:
         return JsonResponse({'error': 'Aluno não encontrado'}, status=407)
     if prazo == 'False':
         return JsonResponse({'error': 'Prazo encerrado'}, status=405)
 
    
-    if student.matriculado:
-        return JsonResponse({'message': 'Matrícula já realizada','turma:': student.turma.name,"trilha":student.turma.trilha},status=200)
+    if student[2] == 'True':
+        aux = getArqv("turmas.txt", student[3])
+        return JsonResponse({'message': 'Matrícula já realizada','turma:': aux[1],"trilha":aux[4]},status=200)
     
 
      # Serializar a instância do modelo Studen
 
     student_data = {
-        'name': student.name,
-        'CPF': student.CPF,
-        'matriculado': student.matriculado,
-        'entry_time': student.entry_time,
-        'time_limit': student.time_limit,
+        'name': student[0],
+        'CPF': student[1],
+        'matriculado': student[2],
         # Adicione outros campos conforme necessário
     }
 
-    turmas = Turma.objects.all()
+    turmas = readArqv("turmas.txt")
     for turma in turmas:
-        reservas = turma.reservas.split(',')
-        if student.CPF in reservas:
+        reservas = turma[7].split('.')
+        if student[0] in reservas:
             return JsonResponse({'error': 'Aluno já reservou uma vaga'}, status=406)
     
     for turma in turmas:
-        reservas = turma.reservas.split(',')
-        if turma.vagas > 0:
-            turma.vagas -= 1
-            reservas.append(student.CPF)
-        turma.reservas = ','.join(reservas)
-        turma.save()
+        reservas = turma[7].split('.')
+        if turma[6] > 0:   #vagas
+            turma[6] -= 1
+            reservas.append(student[0])
+        turma[7] = '.'.join(reservas)
+        saveArqv("turmas.txt", turma)
 
     printa()
 
     return JsonResponse(student_data, safe=False, status=200)
 
 def turnos(request):
-    turmas = list(Turma.objects.values())
+    turmas = readArqv("turmas.txt")
     vagasMatutino = 0
     vagasVespertino = 0
     for turma in turmas:
-        if turma['matutino']:
-            vagasMatutino += turma['vagas']
-        if turma['vespertino']:
-            vagasVespertino += turma['vagas']
+        if turma[2]=='Matutino':
+            vagasMatutino += turma[6]
+        if turma[3]=='Vespertino':
+            vagasVespertino += turma[6]
 
     turnos = [
         {'id': 1, 'name': 'Manhã', 'vagas': vagasMatutino},
@@ -94,19 +143,19 @@ def turnos(request):
     return JsonResponse(turnos, safe=False, status=200)
 
 def turmasMatutino(request):
-    turmas = list(Turma.objects.values())
+    turmas = readArqv("turmas.txt")
     aux = []
     for turma in turmas:
-        if turma['matutino']:
+        if turma[2] == 'Matutino':
             aux.append(turma)
 
     return JsonResponse(aux, safe=False, status=200)
 
 def turmasVespertino(request):
-    turmas = list(Turma.objects.values())
+    turmas = readArqv("turmas.txt")
     aux = []
     for turma in turmas:
-        if turma['vespertino']:
+        if turma[3] == 'Vespertino':
             aux.append(turma)
 
     return JsonResponse(aux, safe=False, status=200)
@@ -118,7 +167,7 @@ def matricula(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            admin = Admin.objects.get(CPF='admin')
+            admin = readArqv("adm.txt")
             cpf = data.get('cpf')
             turma_id = data.get('turma_id')
 
@@ -128,53 +177,47 @@ def matricula(request):
             if not turma_id:
                 return JsonResponse({'error': 'Turma é obrigatória'}, status=401)
         
-            student = Student.objects.get(CPF=cpf)
+            student = getArqv("alunos.txt", cpf)
             
 
-            turma = Turma.objects.get(id=turma_id)
+            turma = getArqv("turmas.txt", turma_id)
            
-            if student.matriculado:
+            if student[2] == 'True':
                 return JsonResponse({'error': 'Matrícula já realizada'}, status=402)
 
-            if turma.vagas == 0:
+            if int(turma[6]) <= 0:
                 if student.CPF not in turma.reservas:
                     return JsonResponse({'error': 'Turma sem vagas'}, status=403)    
                 
-            count = int(admin.count)
-            print (turma.name,turma.reservas)
-            reservas = turma.reservas.split(',')
-            if student.CPF in reservas:
-                student.turma = turma
-                student.matriculado = True
-                student.save()
-                turma.max_size -= 1
-                turma.save()
-                if turma.max_size == 0:
+            count = int(admin[1])
+            reservas = turma[7].split(',')
+            if student[0] in reservas:
+                student[3] = turma[0]
+                student[2] = "True"
+                saveArqv("alunos.txt", student)
+                turma[5] = str(int(turma[5]) - 1)
+                saveArqv("turmas.txt", turma)
+                if turma[5] == "0":
                     count -= 1
-                    admin.count = str(count)
-                    admin.save()
+                    admin[1] = str(count)
+                    saveArqv("adm.txt", admin)
                     if count == 0:
-                        aux1 = Turma.objects.all()
+                        aux1 = readArqv("turmas.txt")
                         for aux2 in aux1:
-                            if aux2.max_size != 0:
-                                aux2.vagas -= 1
-                                aux2.save()
+                            if int(aux2[5]) >= 0:
+                                aux2[6] = str(int(aux2[6]) - 1)
+                                saveArqv("turmas.txt", aux2)
                                 
-                turmas = Turma.objects.all()
-                x = 0
+                turmas = readArqv("turmas.txt")
                 for aux in turmas:
                     printa()
-                    x += 1
-                    print(turma.name)
-                    print(x)
-                    reservaAux = aux.reservas.split(',')
-                    if student.CPF in reservaAux:
-                        reservaAux.remove(student.CPF)
-                        print(turma_id != str(aux.id))
-                        if turma_id != str(aux.id):
-                            aux.vagas += 1
-                    aux.reservas = ','.join(reservaAux)
-                    aux.save()
+                    reservaAux = aux[7].split('.')
+                    if student[0] in reservaAux:
+                        reservaAux.remove(student[0])
+                        if turma_id != str(aux[0]):
+                            aux[6] = str(int(aux[6])+1)
+                    aux[7] = ','.join(reservaAux)
+                    saveArqv("turmas.txt", aux)
                 
                 
 
@@ -188,31 +231,31 @@ def matricula(request):
 
 def relatorio(request):
     if request.method == 'GET':
-        turmas = list(Turma.objects.values())
-        students = list(Student.objects.values())
+        turmas =  readArqv("turmas.txt")
+        students = readArqv("alunos.txt")
         retorno = {}
 
         for turma in turmas:
             lista = []
-            if turma['matutino']:
+            if turma[2] == 'Matutino':
                 string = 'Matutino'
-            if turma['vespertino']:
+            if turma[3] == 'Vespertino':
                 string = 'Vespertino'
-            retorno[turma['name']] = [turma['id'], turma['trilha'], string]
+            retorno[turma[1]] = [turma[0], turma[4], string]
             for student in students:
-                if student['turma_id'] == turma['id']:
+                if student[3] == turma[0]:
                     lista.append(student)
-            retorno[turma['name']].append(lista)
+            retorno[turma[1]].append(lista)
 
         return JsonResponse(retorno, safe=False, status=200)
     else:
         return JsonResponse({'error': 'Método não permitido'}, status=405)
 
 def printa():
-    turmas = Turma.objects.all()
+    turmas = readArqv("turmas.txt")
     print('------------------------------------------')
     for turma in turmas:
-        print(turma.vagas, turma.name, turma.reservas)
+        print(turma[6], turma[1], turma[7])
     print('------------------------------------------')
 @csrf_exempt
 def cadastrar_cpf(request):
@@ -233,15 +276,15 @@ def cadastrar_cpf(request):
             if not name:
                 return JsonResponse({'error': 'Nome é obrigatório'}, status=400)
             
-            student = Student(CPF=cpf, name=name)
+            student = [cpf,name, 'False', 'None']
 
-            students = list(Student.objects.values())
+            students = readArqv("alunos.txt")
 
             for studante in students:
-                if studante['CPF'] == cpf:
+                if studante[0] == cpf:
                     return JsonResponse({'error': 'CPF já cadastrado'}, status=409)
 
-            student.save()
+            appendArqv("alunos.txt", student)
 
             return JsonResponse({'message': 'Aluno cadastrado com sucesso'}, status=200)
         except json.JSONDecodeError:
@@ -250,7 +293,7 @@ def cadastrar_cpf(request):
         return JsonResponse({'error': 'Método não permitido'}, status=405)
 
 def cadastrados(request):
-    students = list(Student.objects.values())
+    students = readArqv("alunos.txt")
     #students = [student for student in students if student['matriculado']]
     return JsonResponse(students, safe=False, status=200)
 
@@ -259,54 +302,49 @@ def timeOut(request):
     if not cpf:
         return JsonResponse({'error': 'CPF é obrigatório'}, status=400)
 
-    try:
-        student = Student.objects.get(CPF=cpf)
-    except Student.DoesNotExist:
+    
+    student = getArqv("alunos.txt", cpf)
+    if student == None:
         return JsonResponse({'error': 'Aluno não encontrado'}, status=404)
 
-    turmas = Turma.objects.all()
+    turmas = readArqv("turmas.txt")
 
     for turma in turmas:
-        print(turma.vagas, turma.name, turma.reservas)
-        reservas = turma.reservas.split(',')
+        reservas = turma[7].split('.')
         if cpf in reservas:
-            turma.vagas += 1
-            reservas.remove(student.CPF)
-            turma.save()
-        turma.reservas = ','.join(reservas)
-        turma.save()
-    for turma in turmas:
-        print(turma.vagas, turma.name, turma.reservas)
+            turma[6] = str(int(turma[6]) + 1)
+            reservas.remove(student[0])
+        turma[7] = ','.join(reservas)
+        saveArqv("turmas.txt", turma)
 
     return JsonResponse({'message': 'LogOut do aluno com sucesso'}, status=200)
 def prazoEncerrado(request):
-    admin = Admin.objects.get(CPF='admin')
-    admin.open = 'False'
+    admin = readArqv("adm.txt")
+    admin[0][0] = 'False'
+    writeArqv("adm.txt", admin)
     return JsonResponse({'message': 'Prazo encerrado'}, status=200)
 def abrirPrazo(request):
-    admin = Admin.objects.get(CPF='admin')
-    admin.open = 'True'
-    qtdTurmas = Turma.objects.all().count()
-    print(qtdTurmas)
-    qtdStudents = Student.objects.all().count()
-    print(qtdStudents)
-    alunos = Student.objects.all()
+    admin = readArqv("adm.txt")
+    admin[0][0] = 'True'
+    alunos = readArqv("alunos.txt")
+    turmas = readArqv("turmas.txt")
+    qtdTurmas = len(turmas)
+    qtdStudents = len(alunos)
     for aluno in alunos:
-        aluno.matriculado = False
-        aluno.turma = None
-        aluno.save()
+        aluno[2] = "False"
+        aluno[3] = "None"
+        saveArqv("alunos.txt", aluno)
 
     max = qtdStudents//qtdTurmas
     max = max + 1
     resto = qtdStudents % qtdTurmas
-    admin.count = str(resto)
-    admin.save()
-    turmas = Turma.objects.all()
+    admin[0][1] = str(resto)
+    writeArqv("adm.txt", admin)
     for turma in turmas:
-        turma.vagas = max
-        turma.max_size = max
-        turma.reservas = ''
-        turma.save()
+        turma[6] = str(max)
+        turma[5] = str(max)
+        turma[7] = ''
+        saveArqv("turmas.txt", turma)
     return JsonResponse({'message': 'Prazo aberto'}, status=200)
 
 def reservas(request):
@@ -314,30 +352,30 @@ def reservas(request):
     if not cpf:
         return JsonResponse({'error': 'CPF é obrigatório'}, status=400)
 
-    try:
-        student = Student.objects.get(CPF=cpf)
-    except Student.DoesNotExist:
+
+    student = getArqv("alunos.txt", cpf)
+    if student == []:
         return JsonResponse({'error': 'Aluno não encontrado'}, status=404)
 
-    turmas = Turma.objects.all()
+    turmas = readArqv("turmas.txt")
     retorno = []
     for turma in turmas:
-        reservas = turma.reservas.split(',')
-        if student.CPF in reservas:
+        reservas = turma[7].split('.')
+        if student[0] in reservas:
             retorno.append(turma.name)
 
     return JsonResponse(retorno, safe=False, status=200)
 
 def restantes(request):
-    admin = Admin.objects.get(CPF='admin')
-    turmas = Turma.objects.all()
-    count = int(admin.count)
+    admin = getArqv("adm.txt", "admin")
+    turmas = readArqv("turmas.txt")
+    count = int(admin[0][1])
     retorno = []
     for turma in turmas:
         if count <= 0:
-            retorno.append((turma.name,turma.max_size-1))
+            retorno.append((turma[1],int(turma[5])-1))
         else:
-            retorno.append((turma.name,turma.max_size))
+            retorno.append((turma[1],int(turma[5])))
 
     return JsonResponse(retorno, safe=False, status=200)
 
