@@ -328,6 +328,18 @@ def reservas(request):
 
     return JsonResponse(retorno, safe=False, status=200)
 
+def restantes(request):
+    admin = Admin.objects.get(CPF='admin')
+    turmas = Turma.objects.all()
+    count = int(admin.count)
+    retorno = []
+    for turma in turmas:
+        if count <= 0:
+            retorno.append((turma.name,turma.max_size-1))
+        else:
+            retorno.append((turma.name,turma.max_size))
+
+    return JsonResponse(retorno, safe=False, status=200)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -343,4 +355,5 @@ urlpatterns = [
     path('adm/prazo_encerrado',prazoEncerrado, name='prazo_encerrado'),
     path('adm/abrir_prazo',abrirPrazo, name='abrir_prazo'),
     path('aluno/reservas',reservas, name='reservas'),
+    path('aluno/matriculas_restantes',restantes, name='restantes'),
 ]
