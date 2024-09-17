@@ -1,1 +1,7 @@
-Django~=5.1
+python3
+pip3
+
+django~=5.1
+django-filter
+django-rest-framework 
+django-cors-headers 
