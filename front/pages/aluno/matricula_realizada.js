@@ -9,11 +9,11 @@ const inter = Inter({ subsets: ["latin"] });
 export default function Realizada() {
   const router = useRouter();
   const { cpf, turno, trilha } = router.query;
-  const { setMatriculou } = useAuth(); 
+  const { cancellTimer } = useAuth(); 
 
   useEffect(() => {
-    setMatriculou(true);
-   }, []);
+    cancellTimer();
+  }, []);
 
   const handleSair = async () => {
     await request_logout(cpf);

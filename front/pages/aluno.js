@@ -1,12 +1,16 @@
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { request_login } from "./api/apiRoutes";
 import { useAuth } from "./context/AuthContext";
 
 export default function Aluno() {
   const [cpf, setCpf] = useState("");
   const router = useRouter();
-  const { setCpfContext, setMatriculou } = useAuth(); 
+  const { setCpfContext, setMatriculou, cancellTimer } = useAuth(); 
+
+  useEffect(() => {
+    cancellTimer();
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();

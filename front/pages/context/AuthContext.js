@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from "react";
+import { createContext, useState, useContext } from "react";
 import { useRouter } from "next/router";
 import { request_logout } from "../api/apiRoutes";
 
@@ -13,7 +13,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = () => {
     setIsLoggedIn(true);
-    console.log("COMECEI - LOGIN");
 
     const timeout = setTimeout(() => {
       logout();
@@ -24,7 +23,6 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     setIsLoggedIn(false);
-    console.log("TERMINEI - LOGIN");
     if (matriculou == false) {
       await request_logout(cpf);
     }
@@ -33,11 +31,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const cancellTimer = () => {
-    console.log("CANCELEI - TIMER");
-    if (timer) {
       clearTimeout(timer); 
       setTimer(null);
-    }
   };
 
   return (

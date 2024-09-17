@@ -145,13 +145,13 @@ def turnos(request):
     vagasMatutino = 0
     vagasVespertino = 0
     for turma in turmas:
-        if turma[2]=='True':
-            vagasMatutino += int(turma[6])
         if turma[3]=='True':
-            vagasVespertino += int(turma[6])
+            vagasMatutino += int(turma[5])
+        if turma[2]=='True':
+            vagasVespertino += int(turma[5])
 
     turnos = [
-        {'id': 1, 'name': 'Manhã', 'vagas': vagasMatutino},
+        {'id': 1, 'name': 'Manha', 'vagas': vagasMatutino},
         {'id': 2, 'name': 'Tarde', 'vagas': vagasVespertino},
     ]
     return JsonResponse(turnos, safe=False, status=200)
