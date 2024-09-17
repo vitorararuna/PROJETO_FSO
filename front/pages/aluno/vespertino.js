@@ -42,7 +42,7 @@ export default function Vespertino() {
   
       router.push({
         pathname: "/aluno/matricula_realizada",
-        query: { cpf: cpf, turno: "MATUTINO", trilha: "Trilha " + trilha + ": " + turma },
+        query: { cpf: cpf, turno: "VESPERTINO", trilha: "Trilha " + trilha + ": " + turma },
       });
     } catch (error) {
       console.error("Erro ao realizar matrícula", error);
